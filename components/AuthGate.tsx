@@ -35,7 +35,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     // Not logged in on a protected route → force login first.
     if (!user && !isPublic) router.replace("/login");
     // Already logged in but sitting on an auth page → send to dashboard.
-    if (user && isPublic) router.replace("/dashboard");
+    if (user && isPublic) router.replace("/");
   }, [ready, user, isPublic, isAdminArea, router]);
 
   // Admin pages render freely and guard themselves.

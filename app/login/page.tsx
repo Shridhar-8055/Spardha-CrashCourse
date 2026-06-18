@@ -21,7 +21,7 @@ export default function LoginPage() {
     setBusy(true);
     const result = await login(name, userId, password);
     setBusy(false);
-    if (result.ok) router.push("/dashboard");
+    if (result.ok) router.push("/");
     else setError(result.error ?? "Something went wrong.");
   };
 
