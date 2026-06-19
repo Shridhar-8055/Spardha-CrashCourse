@@ -39,9 +39,8 @@ function player(youtubeId: string, title: string) {
   #player{pointer-events:none}
   /* transparent layer that owns all clicks (play/pause), so YouTube never does */
   #catch{position:absolute;inset:0;z-index:2;cursor:pointer}
-  /* opaque strip masking YouTube's title flash at play-start */
-  #topmask{position:absolute;top:0;left:0;right:0;height:70px;background:#000;z-index:3;opacity:0;transition:opacity .25s;pointer-events:none}
-  #topmask.show{opacity:1}
+  /* permanent opaque strip hiding YouTube's top title/channel byline + logo */
+  #topmask{position:absolute;top:0;left:0;right:0;height:12%;min-height:48px;background:#000;z-index:3;pointer-events:none}
   /* opaque cover for unstarted/paused/ended states (hides all YT chrome) */
   #poster{position:absolute;inset:0;z-index:4;background:#000;display:flex;align-items:center;justify-content:center;cursor:pointer}
   #poster.hide{display:none}
@@ -78,7 +77,7 @@ function player(youtubeId: string, title: string) {
   <script>var CC_VIDEO=${JSON.stringify(youtubeId)};</script>
   <script>
   (function(){
-    var player, dur=0, poll, ready=false, maskTimer;
+    var player, dur=0, poll, ready=false;
     var $=function(id){return document.getElementById(id)};
     var wrap=$('wrap'), poster=$('poster'), topmask=$('topmask'), playBtn=$('play'),
         muteBtn=$('mute'), fsBtn=$('fs'), seek=$('seek'), played=$('played'),
@@ -87,7 +86,6 @@ function player(youtubeId: string, title: string) {
 
     function fmt(s){s=Math.max(0,Math.floor(s||0));var m=Math.floor(s/60),x=s%60;return m+':'+(x<10?'0':'')+x;}
     function showPoster(v){poster.classList.toggle('hide',!v);}
-    function flashTopMask(){topmask.classList.add('show');clearTimeout(maskTimer);maskTimer=setTimeout(function(){topmask.classList.remove('show')},4500);}
 
     // YouTube API loader
     var tag=document.createElement('script');
@@ -106,7 +104,7 @@ function player(youtubeId: string, title: string) {
     function onReady(){ready=true;dur=player.getDuration()||0;}
     function onState(e){
       var S=YT.PlayerState;
-      if(e.data===S.PLAYING){showPoster(false);flashTopMask();setPlayIcon(true);startPoll();}
+      if(e.data===S.PLAYING){showPoster(false);setPlayIcon(true);startPoll();}
       else if(e.data===S.PAUSED){showPoster(true);setPlayIcon(false);stopPoll();}
       else if(e.data===S.ENDED){showPoster(true);setPlayIcon(false);stopPoll();try{player.seekTo(0,true);}catch(x){}}
       else if(e.data===S.BUFFERING){showPoster(false);}
