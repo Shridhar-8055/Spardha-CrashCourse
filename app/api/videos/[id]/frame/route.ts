@@ -169,7 +169,7 @@ export async function GET(
   const student = await getCurrentStudent();
   if (!student) return html(message("Sign in", "Please log in to watch."), 401);
 
-  const video = getVideo(id);
+  const video = await getVideo(id);
   if (!video) return html(message("Not found", "Video not found."), 404);
 
   return html(player(video.youtubeId, video.title));

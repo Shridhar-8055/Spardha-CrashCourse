@@ -7,5 +7,5 @@ export async function GET() {
   const student = await getCurrentStudent();
   if (!student)
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
-  return NextResponse.json({ videos: listVideos() });
+  return NextResponse.json({ videos: await listVideos() });
 }
