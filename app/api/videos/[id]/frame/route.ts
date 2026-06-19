@@ -41,8 +41,6 @@ function player(youtubeId: string, title: string) {
   #catch{position:absolute;inset:0;z-index:2;cursor:pointer}
   /* permanent opaque strip hiding YouTube's top title/channel byline + logo */
   #topmask{position:absolute;top:0;left:0;right:0;height:12%;min-height:48px;background:#000;z-index:3;pointer-events:none}
-  /* opaque patch hiding the channel watermark logo (bottom-right) */
-  #brmask{position:absolute;right:0;bottom:0;width:24%;height:20%;background:#000;z-index:3;pointer-events:none}
   /* opaque cover for unstarted/paused/ended states (hides all YT chrome) */
   #poster{position:absolute;inset:0;z-index:4;background:#000;display:flex;align-items:center;justify-content:center;cursor:pointer}
   #poster.hide{display:none}
@@ -67,7 +65,6 @@ function player(youtubeId: string, title: string) {
     <div id="player"></div>
     <div id="catch"></div>
     <div id="topmask"></div>
-    <div id="brmask"></div>
     <div id="poster"><button id="bigplay" aria-label="Play">&#9654;</button></div>
     <div id="bar">
       <button class="btn" id="play" aria-label="Play/Pause">&#9654;</button>
