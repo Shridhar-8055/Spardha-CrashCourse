@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { getVideoTitleOverrides } from "./sheets";
 
 /**
  * SERVER-ONLY video catalog, read live from a Google Sheet (CSV export).
@@ -111,6 +112,9 @@ async function fetchVideos(): Promise<VideoMeta[]> {
   const iUrl = header.indexOf("youtube_url");
   const iTime = header.indexOf("upload_time");
 
+  // Admin-set custom names take precedence over the sheet's title column.
+  const overrides = await getVideoTitleOverrides();
+
   const videos: VideoMeta[] = [];
   let n = 0;
   for (let r = 1; r < rows.length; r++) {
@@ -121,14 +125,20 @@ async function fetchVideos(): Promise<VideoMeta[]> {
     );
     if (!ytId) continue;
     n++;
+    const custom = (overrides[ytId] || "").trim();
     videos.push({
       id: opaqueId(ytId),
-      title: cleanTitle(iTitle >= 0 ? row[iTitle] : "", n),
+      title: custom || cleanTitle(iTitle >= 0 ? row[iTitle] : "", n),
       youtubeId: ytId,
       uploadedAt: parseUpload(iTime >= 0 ? row[iTime] : ""),
     });
   }
   return videos;
+}
+
+/** Force the next read to refetch (used after an admin renames a video). */
+export function invalidateVideosCache() {
+  cache = null;
 }
 
 export async function getAllVideos(): Promise<VideoMeta[]> {

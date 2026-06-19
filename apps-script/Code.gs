@@ -34,6 +34,22 @@ function getSheet_() {
   return sh;
 }
 
+// Tab that stores admin-renamed video titles, keyed by YouTube id.
+var VIDEO_TITLES_TAB = 'VideoTitles';
+
+function getTitlesSheet_() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheetByName(VIDEO_TITLES_TAB);
+  if (!sh) {
+    sh = ss.insertSheet(VIDEO_TITLES_TAB);
+    sh.getRange(1, 1, 1, 2).setValues([['key', 'title']]);
+  } else {
+    var h = sh.getRange(1, 1, 1, 2).getValues()[0];
+    if (h.join('') === '') sh.getRange(1, 1, 1, 2).setValues([['key', 'title']]);
+  }
+  return sh;
+}
+
 function rowToObj_(row) {
   var progress = [];
   try { if (row[9]) progress = JSON.parse(row[9]); } catch (e) { progress = []; }
@@ -124,6 +140,35 @@ function doPost(e) {
     if (action === 'delete') {
       var dIdx = findRowIndex_(sh, body.userId);
       if (dIdx !== -1) sh.deleteRow(dIdx);
+      return out_({ ok: true });
+    }
+    if (action === 'videoTitles') {
+      var ts = getTitlesSheet_();
+      var tlast = ts.getLastRow();
+      var map = {};
+      if (tlast >= 2) {
+        var tv = ts.getRange(2, 1, tlast - 1, 2).getValues();
+        for (var ti = 0; ti < tv.length; ti++) {
+          if (String(tv[ti][0]) !== '') map[String(tv[ti][0])] = String(tv[ti][1] || '');
+        }
+      }
+      return out_({ titles: map });
+    }
+    if (action === 'setVideoTitle') {
+      var ts2 = getTitlesSheet_();
+      var key = String(body.key || '');
+      if (!key) return out_({ error: 'key required' });
+      var title = String(body.title || '');
+      var tlast2 = ts2.getLastRow();
+      var found = -1;
+      if (tlast2 >= 2) {
+        var keys = ts2.getRange(2, 1, tlast2 - 1, 1).getValues();
+        for (var ki = 0; ki < keys.length; ki++) {
+          if (String(keys[ki][0]) === key) { found = ki + 2; break; }
+        }
+      }
+      if (found === -1) ts2.appendRow([key, title]);
+      else ts2.getRange(found, 2).setValue(title);
       return out_({ ok: true });
     }
     return out_({ error: 'unknown action' });

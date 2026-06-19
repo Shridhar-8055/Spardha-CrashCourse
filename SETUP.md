@@ -83,6 +83,15 @@ npm run dev
   device is blocked until they log out or the admin resets their session.
 - Up to **50 students** can be created.
 
+## Enabling video renaming (admin dashboard)
+
+The admin "Video names" section lets you rename videos. This stores custom
+names in a `VideoTitles` tab inside the **Students** spreadsheet, so it needs
+the latest `apps-script/Code.gs` (which includes the `videoTitles` /
+`setVideoTitle` actions). After updating the script, **re-deploy a new version**
+(see below). Until then, video renaming returns an error but everything else
+keeps working.
+
 ## If you change the script later
 
 Editing `Code.gs` doesn't update the live URL automatically. Re-deploy:

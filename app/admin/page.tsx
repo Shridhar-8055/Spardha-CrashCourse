@@ -16,6 +16,11 @@ interface AdminStudent {
   createdAt: string;
 }
 
+interface AdminVideo {
+  id: string;
+  title: string;
+}
+
 function formatDate(iso: string) {
   if (!iso) return "—";
   const d = new Date(iso);
@@ -43,6 +48,12 @@ export default function AdminDashboard() {
   const [justCreated, setJustCreated] =
     useState<{ userId: string; password: string } | null>(null);
 
+  // Videos
+  const [videos, setVideos] = useState<AdminVideo[]>([]);
+  const [titleEdits, setTitleEdits] = useState<Record<string, string>>({});
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [savedId, setSavedId] = useState<string | null>(null);
+
   const loadStudents = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -62,6 +73,24 @@ export default function AdminDashboard() {
     }
   }, [router]);
 
+  const loadVideos = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/videos", { cache: "no-store" });
+      if (res.status === 401) {
+        router.replace("/admin/login");
+        return;
+      }
+      const data = await res.json();
+      if (res.ok) {
+        const vids: AdminVideo[] = data.videos ?? [];
+        setVideos(vids);
+        setTitleEdits(Object.fromEntries(vids.map((v) => [v.id, v.title])));
+      }
+    } catch {
+      /* ignore — videos are secondary to student management */
+    }
+  }, [router]);
+
   // Verify admin session, then load.
   useEffect(() => {
     (async () => {
@@ -74,11 +103,37 @@ export default function AdminDashboard() {
         }
         setAuthed(true);
         loadStudents();
+        loadVideos();
       } catch {
         router.replace("/admin/login");
       }
     })();
-  }, [router, loadStudents]);
+  }, [router, loadStudents, loadVideos]);
+
+  const saveTitle = async (id: string) => {
+    const title = (titleEdits[id] ?? "").trim();
+    if (!title || savingId) return;
+    setSavingId(id);
+    setSavedId(null);
+    setError(null);
+    try {
+      const res = await fetch("/api/admin/videos/title", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, title }),
+      });
+      const data = await res.json();
+      if (!res.ok) setError(data.error ?? "Could not save title.");
+      else {
+        setSavedId(id);
+        setVideos((prev) => prev.map((v) => (v.id === id ? { ...v, title } : v)));
+      }
+    } catch {
+      setError("Network error saving title.");
+    } finally {
+      setSavingId(null);
+    }
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -361,6 +416,66 @@ export default function AdminDashboard() {
                 ))}
               </tbody>
             </table>
+          </div>
+        )}
+      </section>
+
+      {/* Video names */}
+      <section className="mt-10">
+        <div className="mb-1 flex items-center justify-between">
+          <h2 className="text-lg font-bold">Video names</h2>
+          <button
+            onClick={loadVideos}
+            className="text-sm text-muted hover:text-text"
+          >
+            ↻ Refresh
+          </button>
+        </div>
+        <p className="mb-3 text-sm text-muted">
+          Rename any video. This name shows to students (overrides the sheet title).
+        </p>
+
+        {videos.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-border bg-surface p-8 text-center text-muted">
+            No videos found in the sheet yet.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {videos.map((v, i) => (
+              <div
+                key={v.id}
+                className="flex items-center gap-3 rounded-xl border border-border bg-surface p-3"
+              >
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-surface-2 text-sm font-bold text-muted">
+                  {i + 1}
+                </span>
+                <input
+                  value={titleEdits[v.id] ?? ""}
+                  onChange={(e) =>
+                    setTitleEdits((prev) => ({ ...prev, [v.id]: e.target.value }))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveTitle(v.id);
+                  }}
+                  className="min-w-0 flex-1 rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm outline-none focus:border-brand"
+                />
+                <button
+                  onClick={() => saveTitle(v.id)}
+                  disabled={
+                    savingId === v.id ||
+                    (titleEdits[v.id] ?? "").trim() === v.title ||
+                    !(titleEdits[v.id] ?? "").trim()
+                  }
+                  className="shrink-0 rounded-lg bg-gradient-to-r from-brand to-brand-2 px-4 py-2 text-sm font-semibold text-white transition-transform hover:scale-[1.02] disabled:opacity-40 disabled:hover:scale-100"
+                >
+                  {savingId === v.id
+                    ? "Saving…"
+                    : savedId === v.id
+                      ? "Saved ✓"
+                      : "Save"}
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </section>

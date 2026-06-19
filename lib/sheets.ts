@@ -36,7 +36,14 @@ function getEnv() {
   return { url, secret };
 }
 
-type Action = "list" | "get" | "append" | "update" | "delete";
+type Action =
+  | "list"
+  | "get"
+  | "append"
+  | "update"
+  | "delete"
+  | "videoTitles"
+  | "setVideoTitle";
 
 async function callScript(
   action: Action,
@@ -120,4 +127,21 @@ export async function updateStudent(student: Student): Promise<void> {
 
 export async function deleteStudent(userId: string): Promise<void> {
   await callScript("delete", { userId });
+}
+
+// ── Video title overrides (admin-renamed video names, keyed by YouTube id) ──
+
+/** Returns a { youtubeId: customTitle } map. Tolerant: {} if not yet supported. */
+export async function getVideoTitleOverrides(): Promise<Record<string, string>> {
+  try {
+    const data = await callScript("videoTitles");
+    return (data.titles as Record<string, string>) ?? {};
+  } catch {
+    // Apps Script not updated yet (unknown action) or unreachable — no overrides.
+    return {};
+  }
+}
+
+export async function setVideoTitle(key: string, title: string): Promise<void> {
+  await callScript("setVideoTitle", { key, title });
 }
