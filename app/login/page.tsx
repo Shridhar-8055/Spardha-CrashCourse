@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useStore } from "@/lib/store";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function LoginPage() {
   const { login } = useStore();
@@ -105,14 +106,23 @@ function Field({
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-medium text-muted">{label}</span>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        autoFocus={autoFocus}
-        className="w-full rounded-xl border border-border bg-surface-2 px-4 py-2.5 text-text outline-none transition-colors placeholder:text-muted/50 focus:border-brand"
-      />
+      {type === "password" ? (
+        <PasswordInput
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          autoFocus={autoFocus}
+        />
+      ) : (
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoFocus={autoFocus}
+          className="w-full rounded-xl border border-border bg-surface-2 px-4 py-2.5 text-text outline-none transition-colors placeholder:text-muted/50 focus:border-brand"
+        />
+      )}
     </label>
   );
 }

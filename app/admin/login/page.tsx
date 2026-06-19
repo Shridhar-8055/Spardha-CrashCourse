@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -43,13 +44,8 @@ export default function AdminLoginPage() {
             <span className="mb-1.5 block text-sm font-medium text-muted">
               Admin password
             </span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoFocus
-              className="w-full rounded-xl border border-border bg-surface-2 px-4 py-2.5 text-text outline-none transition-colors placeholder:text-muted/50 focus:border-brand"
-            />
+            <PasswordInput value={password} onChange={setPassword} autoFocus />
+
           </label>
 
           {error && (
